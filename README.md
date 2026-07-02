@@ -35,19 +35,3 @@ A self‑hosted, enterprise‑grade document management platform with strong enc
 | **Toast Notifications** | WhatsApp‑style non‑blocking feedback replacing all native popups |
 | **Security Headers** | X‑Frame‑Options, X‑Content‑Type‑Options, Referrer‑Policy, Permissions‑Policy |
 | **Developer Attribution** | Visible footer and meta tags for legal ownership |
-
----
-
-## Quick Start
-
-### 1. Deploy Files
-Place the entire `sidms/` folder inside your web server’s document root (e.g., `htdocs/sidms/`).
-
-### 2. Configure Database
-Edit `includes/config.php`:
-```php
-define('DB_HOST', 'localhost');
-define('DB_USER', 'your_db_user');
-define('DB_PASS', 'your_db_pass');
-define('DB_NAME', 'sidms');
-define('MASTER_KEY', 'Your32CharacterLongStringHere!!');   // exactly 32 characters
