@@ -1,0 +1,55 @@
+(function() {
+    'use strict';
+
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+
+    function urlB64ToUint8Array(base64String) {
+        const padding = '='.repeat((4 - base64String.length % 4) % 4);
+        const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+        const rawData = window.atob(base64);
+        const outputArray = new Uint8Array(rawData.length);
+        for (let i = 0; i < rawData.length; ++i) {
+            outputArray[i] = rawData.charCodeAt(i);
+        }
+        return outputArray;
+    }
+
+    async function subscribeUser() {
+        if (Notification.permission !== 'granted') {
+            const permission = await Notification.requestPermission();
+            if (permission !== 'granted') return;
+        }
+        const registration = await navigator.serviceWorker.ready;
+        let subscription = await registration.pushManager.getSubscription();
+        if (!subscription) {
+            subscription = await registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: urlB64ToUint8Array(VAPID_PUBLIC_KEY)
+            });
+        }
+        await fetch(BASE_URL + '/api/push_subscribe.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                endpoint: subscription.endpoint,
+                keys: {
+                    p256dh: btoa(String.fromCharCode.apply(null, new Uint8Array(subscription.getKey('p256dh')))),
+                    auth: btoa(String.fromCharCode.apply(null, new Uint8Array(subscription.getKey('auth'))))
+                },
+                user_id: USER_ID
+            })
+        });
+    }
+
+    if (Notification.permission === 'granted') {
+        subscribeUser();
+    } else {
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                if (Notification.permission === 'default') {
+                    subscribeUser();
+                }
+            }, 3000);
+        });
+    }
+})();
